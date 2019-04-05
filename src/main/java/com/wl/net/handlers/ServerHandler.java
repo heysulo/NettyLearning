@@ -19,17 +19,25 @@
 package com.wl.net.handlers;
 
 import com.wl.net.messages.HeartBeatMessage;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
+import io.netty.util.concurrent.GlobalEventExecutor;
+import java.net.InetAddress;
 
 /**
  *
  * @author sulochana
  */
 public class ServerHandler extends ChannelInboundHandlerAdapter {
- 
+    
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
       HeartBeatMessage ts = (HeartBeatMessage) msg;
@@ -52,6 +60,24 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
       // Close the connection when an exception is raised.
       cause.printStackTrace();
       ctx.close();
+    }
+    
+    @Override
+    public void channelActive(final ChannelHandlerContext ctx) {
+        // Once session is secured, send a greeting and register the channel to the global channel
+        // list so the channel received the messages from others.
+        ctx.pipeline().get(SslHandler.class).handshakeFuture().addListener(
+                new GenericFutureListener<Future<Channel>>() {
+                    @Override
+                    public void operationComplete(Future<Channel> future) throws Exception {
+                        System.out.println(
+                                "Welcome to " + InetAddress.getLocalHost().getHostName() + " secure chat service!\n");
+                        System.out.println(
+                                "Your session is protected by " +
+                                        ctx.pipeline().get(SslHandler.class).engine().getSession().getCipherSuite() +
+                                        " cipher suite.\n");
+                    }
+        });
     }
     
 }

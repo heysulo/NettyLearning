@@ -41,8 +41,8 @@ import javax.net.ssl.SSLException;
  */
 public class NettyClient {
     
-//    public static String serverIp = "127.0.0.1";
-    public static String serverIp = "35.197.137.197";
+    public static String serverIp = "127.0.0.1";
+//    public static String serverIp = "35.197.137.197";
 
     public static void main(String[] args) throws SSLException, InterruptedException {
 
@@ -50,7 +50,7 @@ public class NettyClient {
 //        final SslContext sslCtx = SslContextBuilder.forClient()
 //            .keyManager(new File("cert.crt"), new File("private.pem")).build();
         final SslContext sslCtx = SslContextBuilder.forClient()
-            .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+            .trustManager(new File("cert.crt")).build();
         Bootstrap b = new Bootstrap();
         b.group(workerGroup);
         b.channel(NioSocketChannel.class);

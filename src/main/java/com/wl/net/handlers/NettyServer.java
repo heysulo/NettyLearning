@@ -35,10 +35,10 @@ public class NettyServer {
         
         File certificate = new File("cert.crt");  // certificate
         File privateKey = new File("private.pem");  // private key
-//        SslContext sslCtx = SslContextBuilder.forServer(certificate, privateKey).build();
+        SslContext sslCtx = SslContextBuilder.forServer(certificate, privateKey).build();
         
-        SelfSignedCertificate ssc = new SelfSignedCertificate();
-        SslContext sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
+//        SelfSignedCertificate ssc = new SelfSignedCertificate();
+//        SslContext sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
 
         NioEventLoopGroup boosGroup = new NioEventLoopGroup();
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();
