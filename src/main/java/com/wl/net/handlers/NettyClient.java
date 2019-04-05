@@ -22,13 +22,17 @@ import com.wl.net.messages.core.MessageDecoder;
 import com.wl.net.messages.core.MessageEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.io.File;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLException;
 
 /**
@@ -36,23 +40,24 @@ import javax.net.ssl.SSLException;
  * @author sulochana
  */
 public class NettyClient {
+    
+//    public static String serverIp = "127.0.0.1";
+    public static String serverIp = "35.197.137.197";
 
-    public static void main(String[] args) throws SSLException {
+    public static void main(String[] args) throws SSLException, InterruptedException {
 
-        NioEventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+//        final SslContext sslCtx = SslContextBuilder.forClient()
+//            .keyManager(new File("cert.crt"), new File("private.pem")).build();
+        final SslContext sslCtx = SslContextBuilder.forClient()
+            .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         Bootstrap b = new Bootstrap();
         b.group(workerGroup);
         b.channel(NioSocketChannel.class);
+        b.handler(new SecureChatClientInitializer(sslCtx));
 
-        b.handler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            public void initChannel(SocketChannel ch) throws Exception {
-                ch.pipeline().addLast(new MessageEncoder(), new MessageDecoder(), new ClientHandler());
-            }
-        });
-
-        String serverIp = "127.0.0.1";
+        
         System.out.println("ServerIP: " + serverIp);
-        b.connect(serverIp, 3000);
+        b.connect(serverIp, 3000).sync().channel();;
     }
 }

@@ -17,11 +17,13 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import java.io.File;
 import java.io.IOException;
+import java.security.cert.CertificateException;
 
 /**
  *
@@ -29,35 +31,21 @@ import java.io.IOException;
  */
 public class NettyServer {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, CertificateException {
+        
+        File certificate = new File("cert.crt");  // certificate
+        File privateKey = new File("private.pem");  // private key
+//        SslContext sslCtx = SslContextBuilder.forServer(certificate, privateKey).build();
+        
+        SelfSignedCertificate ssc = new SelfSignedCertificate();
+        SslContext sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
 
         NioEventLoopGroup boosGroup = new NioEventLoopGroup();
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(boosGroup, workerGroup);
         bootstrap.channel(NioServerSocketChannel.class);
-
-    // ===========================================================
-        // 1. define a separate thread pool to execute handlers with
-        //    slow business logic. e.g database operation
-        // ===========================================================
-        final EventExecutorGroup group = new DefaultEventExecutorGroup(1500); //thread pool of 1500
-
-        bootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            protected void initChannel(SocketChannel ch) throws Exception {
-                ChannelPipeline pipeline = ch.pipeline();
-                pipeline.addLast("idleStateHandler", new IdleStateHandler(0, 0, 1)); // add with name
-                pipeline.addLast(new MessageEncoder()); // add without name, name auto generated
-                pipeline.addLast(new MessageDecoder()); // add without name, name auto generated
-
-        //===========================================================
-                // 2. run handler with slow business logic 
-                //    in separate thread from I/O thread
-                //===========================================================
-                pipeline.addLast(group, "serverHandler", new ServerHandler());
-            }
-        });
+        bootstrap.childHandler(new SecureChatServerInitializer(sslCtx));
 
         bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
         System.out.println("Running");
