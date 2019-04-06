@@ -16,30 +16,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package com.wl.net.handlers;
+package com.wl.net.callback;
 
-import com.wl.net.messages.HeartBeatMessage;
+import com.wl.net.handlers.Client;
 import com.wl.net.messages.Message;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
  *
  * @author sulochana
  */
-public class ClientHandler extends ChannelInboundHandlerAdapter {
- 
-  @Override
-  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-    HeartBeatMessage ts = (HeartBeatMessage) msg;
-    ctx.writeAndFlush(ts); //recieved message sent back directly
-    System.out.println("HTT : " + (System.currentTimeMillis()- ts.getCreationTime()) + "ms");
-  }
- 
-  @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-    // Close the connection when an exception is raised.
-    cause.printStackTrace();
-    ctx.close();
-  }
+public abstract interface ClientCallback {
+    public void OnConnect(Client client);
+    public void OnDisconnect(Client client);
+    public void OnMessage(Client client, Message msg);
+    public void OnError(Client client, Throwable cause);
+    public void OnEvent(Client client, Object event);  
+    public void OnSSLHandshakeSuccess(Client client);  
+    public void OnSSLHandshakeFailure(Client client);  
 }

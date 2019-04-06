@@ -16,17 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package com.wl.net.handlers;
+package com.wl.net.handlers.server;
 
 import com.wl.net.messages.core.MessageDecoder;
 import com.wl.net.messages.core.MessageEncoder;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
-import io.netty.handler.codec.Delimiters;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
@@ -49,10 +45,9 @@ public class SecureChatServerInitializer extends ChannelInitializer<SocketChanne
         ChannelPipeline pipeline = ch.pipeline();
         final EventExecutorGroup group = new DefaultEventExecutorGroup(1500); //thread pool of 1500
         pipeline.addLast(sslCtx.newHandler(ch.alloc()));
-//        pipeline.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.nulDelimiter()));
         pipeline.addLast("idleStateHandler", new IdleStateHandler(0, 0, 1)); // add with name
-        pipeline.addLast(new MessageEncoder()); // add without name, name auto generated
-        pipeline.addLast(new MessageDecoder()); // add without name, name auto generated
+        pipeline.addLast(new MessageEncoder());
+        pipeline.addLast(new MessageDecoder());
         pipeline.addLast(group, "serverHandler", new ServerHandler());
     }
 }

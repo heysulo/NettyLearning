@@ -16,49 +16,40 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package com.wl.net.handlers;
+package com.wl.net.handlers.client;
 
+import com.wl.net.handlers.Client;
 import com.wl.net.messages.core.MessageDecoder;
 import com.wl.net.messages.core.MessageEncoder;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
-import io.netty.handler.codec.Delimiters;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.ssl.SslContext;
 
 /**
  *
  * @author sulochana
  */
-public class SecureChatClientInitializer extends ChannelInitializer<SocketChannel> {
+public class SecureClientInitializer extends ChannelInitializer<SocketChannel> {
 
     private final SslContext sslCtx;
+    private final String host;
+    private final int port;
+    private final Client client;
 
-    public SecureChatClientInitializer(SslContext sslCtx) {
+    public SecureClientInitializer(SslContext sslCtx, String host, int port, Client client) {
         this.sslCtx = sslCtx;
+        this.host = host;
+        this.port = port;
+        this.client = client;
     }
 
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
-        System.out.println("channelinit");
-
-        // Add SSL handler first to encrypt and decrypt everything.
-        // In this example, we use a bogus certificate in the server side
-        // and accept any invalid certificates in the client side.
-        // You will need something more complicated to identify both
-        // and server in the real world.
-        pipeline.addLast(sslCtx.newHandler(ch.alloc(), NettyClient.serverIp, 3000));
-
-        // On top of the SSL handler, add the text line codec.
-//        pipeline.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.nulDelimiter()));
+        pipeline.addLast(sslCtx.newHandler(ch.alloc(), this.host, this.port));
         pipeline.addLast(new MessageEncoder());
         pipeline.addLast(new MessageDecoder());
-        pipeline.addLast(new ClientHandler());
-
-        // and then business logic.
+        pipeline.addLast(new ClientHandler(this.client));
     }
 }
